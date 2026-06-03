@@ -36,7 +36,8 @@ const createBooking = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.status(201).json(savedBooking);
     }
     catch (error) {
-        res.status(500).json({ message: 'Error creating booking', error });
+        console.error('Error creating booking:', error);
+        res.status(500).json({ message: error.message || 'Error creating booking', error });
     }
 });
 exports.createBooking = createBooking;

@@ -31,8 +31,9 @@ export const createBooking = async (req: Request, res: Response) => {
             .catch(err => console.error('Failed to send booking acknowledgement email to client:', err));
 
         res.status(201).json(savedBooking);
-    } catch (error) {
-        res.status(500).json({ message: 'Error creating booking', error });
+    } catch (error: any) {
+        console.error('Error creating booking:', error);
+        res.status(500).json({ message: error.message || 'Error creating booking', error });
     }
 };
 
