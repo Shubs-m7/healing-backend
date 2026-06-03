@@ -24,6 +24,9 @@ export interface IBooking extends Document {
         additionalNotes: string;
     };
     status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+    scheduledDate?: string;
+    scheduledTime?: string;
+    suggestedTimes?: string[];
     createdAt: Date;
 }
 
@@ -55,6 +58,9 @@ const BookingSchema: Schema = new Schema({
         enum: ['pending', 'confirmed', 'completed', 'cancelled'],
         default: 'pending',
     },
+    scheduledDate: { type: String },
+    scheduledTime: { type: String },
+    suggestedTimes: [{ type: String }],
     createdAt: { type: Date, default: Date.now },
 });
 
