@@ -72,15 +72,17 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         // Store in Otp collection (upsert based on email)
         yield Otp_1.default.findOneAndUpdate({ email: email.toLowerCase() }, { otp, createdAt: new Date() }, { upsert: true, new: true });
-        // Trigger SMTP email sending asynchronously
-        (0, emailService_1.sendOtpEmail)(email.toLowerCase(), otp)
-            .then(info => {
+        // Trigger SMTP email sending and await it for serverless compatibility
+        try {
+            const info = yield (0, emailService_1.sendOtpEmail)(email.toLowerCase(), otp);
             if (info)
                 console.log(`[AUTH] OTP email sent successfully to ${email}`);
             else
                 console.warn(`[AUTH] Failed to send OTP email to ${email}`);
-        })
-            .catch(err => console.error('[AUTH] Error triggering OTP email:', err));
+        }
+        catch (err) {
+            console.error('[AUTH] Error triggering OTP email:', err);
+        }
         // Return success. Securely verify OTP via email only.
         res.status(200).json({
             message: 'Password verified. OTP code has been sent to your registered email address.',

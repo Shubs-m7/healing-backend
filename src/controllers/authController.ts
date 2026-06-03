@@ -69,13 +69,14 @@ export const login = async (req: Request, res: Response) => {
       { upsert: true, new: true }
     );
 
-    // Trigger SMTP email sending asynchronously
-    sendOtpEmail(email.toLowerCase(), otp)
-      .then(info => {
-        if (info) console.log(`[AUTH] OTP email sent successfully to ${email}`);
-        else console.warn(`[AUTH] Failed to send OTP email to ${email}`);
-      })
-      .catch(err => console.error('[AUTH] Error triggering OTP email:', err));
+    // Trigger SMTP email sending and await it for serverless compatibility
+    try {
+      const info = await sendOtpEmail(email.toLowerCase(), otp);
+      if (info) console.log(`[AUTH] OTP email sent successfully to ${email}`);
+      else console.warn(`[AUTH] Failed to send OTP email to ${email}`);
+    } catch (err) {
+      console.error('[AUTH] Error triggering OTP email:', err);
+    }
 
     // Return success. Securely verify OTP via email only.
     res.status(200).json({

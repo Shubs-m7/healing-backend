@@ -20,19 +20,19 @@ const createBooking = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         // Basic validation could go here if not handled by Mongoose
         const newBooking = new Booking_1.default(req.body);
         const savedBooking = yield newBooking.save();
-        // Send email notification asynchronously
-        console.log('Triggering email notification for booking:', savedBooking._id);
-        // Convert to plain object to handle Map types correctly
-        const bookingObject = savedBooking.toObject({ flattenMaps: true });
-        // Send email to admin/clinic
-        (0, emailService_1.sendBookingNotification)(bookingObject)
-            .then(info => console.log('Email notification result:', info ? 'Success' : 'Failed'))
-            .catch(err => console.error('Failed to trigger email:', err));
-        // Send confirmation email to client
-        const clientName = `${savedBooking.personalDetails.firstName} ${savedBooking.personalDetails.lastName}`;
-        (0, emailService_1.sendBookingConfirmationToClient)(savedBooking.personalDetails.email, clientName)
-            .then(() => console.log(`Booking acknowledgement email sent to client: ${savedBooking.personalDetails.email}`))
-            .catch(err => console.error('Failed to send booking acknowledgement email to client:', err));
+        // Send email notifications and await them to ensure they complete on serverless environments like Vercel
+        try {
+            const bookingObject = savedBooking.toObject({ flattenMaps: true });
+            const clientName = `${savedBooking.personalDetails.firstName} ${savedBooking.personalDetails.lastName}`;
+            yield Promise.all([
+                (0, emailService_1.sendBookingNotification)(bookingObject),
+                (0, emailService_1.sendBookingConfirmationToClient)(savedBooking.personalDetails.email, clientName)
+            ]);
+            console.log('Booking notification and client confirmation emails sent successfully.');
+        }
+        catch (emailError) {
+            console.error('Failed to send booking emails:', emailError);
+        }
         res.status(201).json(savedBooking);
     }
     catch (error) {
@@ -64,11 +64,14 @@ const updateBookingStatus = (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         if (status === 'confirmed') {
             if (updatedBooking.scheduledDate && updatedBooking.scheduledTime) {
-                // Send confirmation email asynchronously
                 const clientName = `${updatedBooking.personalDetails.firstName} ${updatedBooking.personalDetails.lastName}`;
-                (0, emailService_1.sendAppointmentConfirmedEmail)(updatedBooking.personalDetails.email, clientName, updatedBooking.scheduledDate, updatedBooking.scheduledTime)
-                    .then(() => console.log(`[AUTH] Appointment confirmation email sent to ${updatedBooking.personalDetails.email}`))
-                    .catch(err => console.error('[AUTH] Failed to send confirmation email:', err));
+                try {
+                    yield (0, emailService_1.sendAppointmentConfirmedEmail)(updatedBooking.personalDetails.email, clientName, updatedBooking.scheduledDate, updatedBooking.scheduledTime);
+                    console.log(`[AUTH] Appointment confirmation email sent to ${updatedBooking.personalDetails.email}`);
+                }
+                catch (err) {
+                    console.error('[AUTH] Failed to send confirmation email:', err);
+                }
             }
         }
         res.status(200).json(updatedBooking);
@@ -134,10 +137,14 @@ const suggestAlternativeTime = (req, res) => __awaiter(void 0, void 0, void 0, f
         const schedulerLink = `${frontendUrl}/schedule/${updatedBooking._id}`;
         // Send alternate slot recommendation email asynchronously
         const clientName = `${updatedBooking.personalDetails.firstName} ${updatedBooking.personalDetails.lastName}`;
-        (0, emailService_1.sendRescheduleSuggestionEmail)(updatedBooking.personalDetails.email, clientName, updatedBooking.scheduledDate, booking.scheduledTime, // original requested time
-        suggestedTimes, schedulerLink)
-            .then(() => console.log(`[AUTH] Reschedule suggestion email sent to client ${updatedBooking.personalDetails.email}`))
-            .catch(err => console.error('[AUTH] Failed to send reschedule suggestion email:', err));
+        try {
+            yield (0, emailService_1.sendRescheduleSuggestionEmail)(updatedBooking.personalDetails.email, clientName, updatedBooking.scheduledDate, booking.scheduledTime, // original requested time
+            suggestedTimes, schedulerLink);
+            console.log(`[AUTH] Reschedule suggestion email sent to client ${updatedBooking.personalDetails.email}`);
+        }
+        catch (err) {
+            console.error('[AUTH] Failed to send reschedule suggestion email:', err);
+        }
         res.status(200).json(updatedBooking);
     }
     catch (error) {
@@ -157,9 +164,13 @@ const sendSchedulingLink = (req, res) => __awaiter(void 0, void 0, void 0, funct
         const schedulerLink = `${frontendUrl}/schedule/${booking._id}`;
         // Send email notification asynchronously
         const clientName = `${booking.personalDetails.firstName} ${booking.personalDetails.lastName}`;
-        (0, emailService_1.sendSchedulingLinkEmail)(booking.personalDetails.email, clientName, schedulerLink)
-            .then(() => console.log(`[AUTH] Scheduling link sent to client ${booking.personalDetails.email}`))
-            .catch(err => console.error('[AUTH] Failed to send scheduling email:', err));
+        try {
+            yield (0, emailService_1.sendSchedulingLinkEmail)(booking.personalDetails.email, clientName, schedulerLink);
+            console.log(`[AUTH] Scheduling link sent to client ${booking.personalDetails.email}`);
+        }
+        catch (err) {
+            console.error('[AUTH] Failed to send scheduling email:', err);
+        }
         res.status(200).json(booking);
     }
     catch (error) {
