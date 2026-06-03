@@ -18,6 +18,9 @@ app.use(express_1.default.json());
 // Routes
 app.use('/api/bookings', bookingRoutes_1.default);
 app.use('/api/auth', authRoutes_1.default);
+app.get('/', (req, res) => {
+    res.json({ message: "PhysioHeal / Adaptus Clinic Backend API is running successfully!" });
+});
 // Database Connection
 mongoose_1.default
     .connect(MONGO_URI)
