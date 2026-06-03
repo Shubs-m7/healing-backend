@@ -2,8 +2,6 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.HQ_URL = void 0;
 const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
@@ -34,5 +32,5 @@ if (!process.env.VERCEL) {
         console.log(`Server running on port ${PORT}`);
     });
 }
-exports.HQ_URL = "http://localhost:5000";
-exports.default = app;
+const HQ_URL = "http://localhost:5000";
+module.exports = app;
