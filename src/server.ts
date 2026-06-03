@@ -24,12 +24,16 @@ mongoose
     .connect(MONGO_URI)
     .then(() => {
         console.log('Connected to MongoDB');
-        app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
-        });
     })
     .catch((err) => {
         console.error('MongoDB connection error:', err);
     });
 
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
+
 export const HQ_URL = "http://localhost:5000";
+export default app;
